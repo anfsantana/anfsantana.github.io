@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script src="js/jquery-3.3.1.js"></script>
+    <link rel="stylesheet" href="estilos.css" /> <!-- Importando css -->
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    <style>
+        body {
+            font-family: 'Century Gothic',serif;
+        }
+        .loader {
+            /*display: none;*/
+            margin: auto;
+            width: 50%;
+            padding: 10px;
+            text-align: center;
+            vertical-align: center;
+            -border: 3px solid green;
+        }
+    </style>
+</head>
+<body>
+    <div id="espaco">
+        <div id="div_todo">
+            <div class="container" style="margin: auto; text-align: center; width: 50%; min-height: 50%; vertical-align: middle">
+                <button onclick="iniciaMapa()">Ver mapa!</button>
+                <button onclick="iniciaGrafico()">Ver gráfico!</button>
+                Buscar: <input id="txtBusca" type="text" name="txtBusca">  <button id="botao" onclick="submeter($('#txtBusca').val())" >OK</button>                
+            </div>
+            <div class="loader" style="display: none">
+                <img src="img/loader.gif" alt="loader">
+                <h3>Carregando....</h3>
+            </div>
+            <div id="resultado">
+                </div>
+            <table>
+                <tr>
+                    <td>
+                        <div class="container-mapa" style="width: 50%; float: left; display: none">
+                            <h2>Analfabetismo</h2>
+                            <div id="mapa"></div>
+                        </div>
+                    </td>                                     
+                </tr>
+                <tr>                      
+                    <td>
+                        <div class="container-mapa" style="width: 50%; float: left; display: none">
+                            <h2>Renda</h2>
+                            <div id="mapaRenda"></div>
+                        </div>
+                    </td>     
+                </tr>
+                <tr>
+                    <td>
+                        <div class="container-grafico" style="width: 50%; float: left; display: none">
+                            <h2>Gráfico de alguma coisa do Brasil!</h2>
+                            <div id="grafico" style="width: 900px; height: 500px;"></div>
+                        </div>
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>
+
+
+</body>
+<script>
+
+
+    this.settings = {
+            "url": "https://api.twitter.com/1.1/search/tweets.json",
+            "method": "GET",
+            "headers": {
+                "Authorization": "OAuth " +
+                    "oauth_consumer_key=\"dSaXs1OMjdiNRZaZGV8IqxFgB\"," +
+                    "oauth_token=\"222773780-7ZbtQ7OFBXmJiTBYSleAZfNm5T6CnmDP5PBeIm9z\"," +
+                    "oauth_signature_method=\"HMAC-SHA1\"," +
+                    "oauth_timestamp=\"1545089944\"," +
+                    "oauth_nonce=\"KrUKa6XJ1Bd\"," +
+                    "oauth_version=\"1.0\"," +
+                    "oauth_signature=\"Sq2KrUHsT7MZXAW3O%2FW4GANvcwM%3D\"",
+            }
+    }
+  
+    let submeter = (q) => {
+
+        this.settings.data = {
+            q: q,
+            result_type: 'popular',
+            lang: 'pt'
+        };
+
+        $.ajax(this.settings, function (a,b,c,d) {
+            console.log(a,b,c,d);
+        }).done(function (response) {
+            console.log(response);
+        })
+    }
+    
+    google.charts.load('current', {
+        'packages':['geochart', 'corechart'],
+        // Note: you will need to get a mapsApiKey for your project.
+        // See: https://developers.google.com/chart/interactive/docs/basic_load_libs#load-settings
+        'mapsApiKey': 'AIzaSyD-9tSrke72PouQMnMX-a7eZSW0jkFMBWY'
+    });
+
+    let loader = $('.loader');
+    let estados = {
+        'AC': 'Acre',
+        'AL': 'Alagoas',
+        'AP': 'Amapá',
+        'AM': 'Amazonas',
+        'BA': 'Bahia',
+        'CE': 'Ceará',
+        'DF': 'Distrito Federal',
+        'ES': 'Espírito Santo',
+        'GO': 'Goiás',
+        'MA': 'Maranhão',
+        'MT': 'Mato Grosso',
+        'MS': 'Mato Grosso do Sul',
+        'MG': 'Minas Gerais',
+        'PA': 'Pará',
+        'PB': 'Paraíba',
+        'PR': 'Paraná',
+        'PE': 'Pernambuco',
+        'PI': 'Piauí',
+        'RJ': 'Rio de Janeiro',
+        'RN': 'Rio Grande do Norte',
+        'RS': 'Rio Grande do Sul',
+        'RO': 'Rondônia',
+        'RR': 'Roraima',
+        'SC': 'Santa Catarina',
+        'SP': 'São Paulo',
+        'SE': 'Sergipe',
+        'TO': 'Tocantins'
+    };
+    let itensMapa = [['Estado', '%']];
+    let itensMapa2 = [['Estado', '%']];
+    let itensGrafico = [['Estado', 'Indice']];
+
+    function csvToArray(csv, removeHeader = true) {
+        console.log('Iniciando a transformação de CSV em array!');
+        //Transforma as linhas do CSV em array.
+        let linhas = csv.split(/\r\n|\n/);
+
+        if(linhas[linhas.length - 1] === '') {
+            linhas.pop(); // remove last blank line
+        }
+
+        let array = [];
+
+        // Para cada linha do CSV, transformamos em um array e adicionamos em "array"
+        linhas.forEach(function (item, index) {
+            array.push(item.split(/;/))
+        });
+        if(removeHeader) {
+            array.shift(); // remove o header
+        }
+        console.log('Finalizada a transformação de CSV em array!');
+        return array;
+    }
+
+    function csvToJson(csv) {
+        console.log('Iniciando a transformação de CSV em JSON!');
+        //Transforma as linhas do CSV em array de objetos JSON.
+        let linhas = csv.split(/\r\n|\n/);
+        let array = [];
+        let header = linhas[0].split(/;/);
+        linhas.shift(); // remove header
+
+        if(linhas[linhas.length - 1] === '') {
+            linhas.pop(); // remove last blank line
+        }
+
+        // Para cada linha do CSV, transformamos em um array e adicionamos em "array"
+        linhas.forEach(function (item, index) {
+            let object = {};
+            let arrayItem = item.split(/;/);
+            header.forEach(function (_item, _index) {
+                let value = arrayItem[_index] ? arrayItem[_index] : null;
+                let floatValue = parseFloat(value);
+                object[_item] = isNaN(floatValue) ? value : floatValue;
+            });
+
+            array.push(object);
+        });
+        return array;
+    }
+
+    // Função que iniciar o mapa e mostra o loader na tela.
+    function iniciaMapa() {
+        $('.container-mapa').show();
+        loader.show();
+        // Aqui fazemos um requisição Ajax do tipo GET para obeter o arquivo CSV.
+        $.ajax('bases/base1.csv', {
+            // no sucesso da requisição processamos o mapa
+            success: processaMapa,
+            error: function () {
+                alert("Erro ao carregar CSV!");
+            }
+        });
+ 
+        // Aqui fazemos um requisição Ajax do tipo GET para obeter o arquivo CSV.
+        $.ajax('bases/base2.csv', {
+            // no sucesso da requisição processamos o mapa
+            success: processaMapaRenda,
+            error: function () {
+                alert("Erro ao carregar CSV!");
+            }
+        });
+    }
+
+    function processaMapa(data) {
+        let array = csvToArray(data);
+
+        // Aqui extraimos do array apenas as informações que queremos, e adicionamos no array "items",
+        // que será utilizado pelo mapa do Google Charts.
+        array.forEach(function (item, index) {
+            if (estados[item[3]] !== item[2]) {
+                return;
+            }
+            if (item[1] !== 'Todas as idades') {
+                return;
+            }
+            if (item[6] !== 'Todas as raças/cores') {
+                return;
+            }
+            if (item[5] !== 'Ambos os sexos') {
+                return;
+            }
+            if (item[4] !== 'Rural e Urbana') {
+                return;
+            }
+            if (parseInt(item[0]) !== 2010) {
+                return;
+            }
+            itensMapa.push([removeAcentos(item[2]), parseInt((parseFloat(item[8]) - 1) * -100)]);
+        });
+
+        // Inicia a renderização do mapa.
+        console.log('Renderizando mapa...');
+        let options = {};
+        options['region'] = 'BR';
+        options['resolution'] = 'provinces';
+        options['width'] = 800;
+        options['height'] = 499;
+        options['colorAxis'] = {colors: ['#f7fcff', '#cb0009']};
+
+        itensMapa.pop();
+        itensMapa.pop();
+        itensMapa.pop();
+        console.log(itensMapa);
+        itensMapa = google.visualization.arrayToDataTable(itensMapa);
+
+        let geochart = new google.visualization.GeoChart(document.getElementById('mapa'));
+        geochart.draw(itensMapa, options);
+        loader.hide();
+    }
+
+    //Renda
+    function processaMapaRenda(data) {
+        let array = csvToArray(data);
+
+        // Aqui extraimos do array apenas as informações que queremos, e adicionamos no array "items",
+        // que será utilizado pelo mapa do Google Charts.
+        array.forEach(function (item, index) {
+            if (estados[item[3]] !== item[2]) {
+                return;
+            }
+            if (item[1] !== 'Todas as idades') {
+                return;
+            }
+            if (item[6] !== 'Todas as raças/cores') {
+                return;
+            }
+            if (item[5] !== 'Ambos os sexos') {
+                return;
+            }
+            if (item[4] !== 'Rural e Urbana') {
+                return;
+            }
+            if (parseInt(item[0]) !== 2010) {
+                return;
+            }
+            itensMapa2.push([removeAcentos(item[2]), parseInt((parseFloat(item[8]) - 1) * -100)]);
+        });
+
+        // Inicia a renderização do mapa.
+        console.log('Renderizando mapa...');
+        let options = {};
+        options['region'] = 'BR';
+        options['resolution'] = 'provinces';
+        options['width'] = 800;
+        options['height'] = 499;
+        options['colorAxis'] = {colors: ['#f7fcff', '#cb0009']};
+
+        itensMapa2.pop();
+        itensMapa2.pop();
+        itensMapa2.pop();
+        console.log(itensMapa2);
+        itensMapa2 = google.visualization.arrayToDataTable(itensMapa2);
+
+        let geochart = new google.visualization.GeoChart(document.getElementById('mapaRenda'));
+        geochart.draw(itensMapa2, options);
+        loader.hide();
+    }
+
+    // Função para remover acentos.
+    function removeAcentos(texto) {
+        texto = texto.replace(new RegExp('[áàâã]', 'g'), 'a');
+        texto = texto.replace(new RegExp('[ÁÀÂÃ]', 'g'), 'A');
+
+        texto = texto.replace(new RegExp('[éèê]', 'g'), 'e');
+        texto = texto.replace(new RegExp('[ÉÈÊ]', 'g'), 'E');
+
+        texto = texto.replace(new RegExp('[íìî]', 'g'), 'i');
+        texto = texto.replace(new RegExp('[ÍÌÎ]', 'g'), 'I');
+
+        texto = texto.replace(new RegExp('[óòôõ]', 'g'), 'o');
+        texto = texto.replace(new RegExp('[ÓÒÔÕ]', 'g'), 'O');
+
+        texto = texto.replace(new RegExp('[úùûü]', 'g'), 'u');
+        texto = texto.replace(new RegExp('[ÚÙÛ]', 'g'), 'U');
+
+        texto = texto.replace(new RegExp('[ç]', 'g'), 'c');
+        texto = texto.replace(new RegExp('[Ç]', 'g'), 'C');
+        return texto;
+    }
+
+    function iniciaGrafico() {
+        $('.container-grafico').show();
+        loader.show();
+        // Aqui fazemos um requisição Ajax do tipo GET para obeter o arquivo CSV.
+        $.ajax('bases/base2.csv', {
+            // no sucesso da requisição processamos o mapa
+            success: processaGrafico,
+            error: function () {
+                alert("Erro ao carregar CSV!");
+            }
+        });
+    }
+
+    function processaGrafico(data) {
+        let array = csvToJson(data);
+
+        // Aqui extraimos do array apenas as informações que queremos, e adicionamos no array "items",
+        // que será utilizado pelo mapa do Google Charts.
+        array.forEach(function (item, index) {
+            if (estados[item.UF] !== item.Geografia) {
+                return;
+            }
+            if (item.FaixaEtaria !== 'Todas as idades') {
+                return;
+            }
+            if (item.Cor !== 'Todas as raças/cores') {
+                return;
+            }
+            if (item.Sexo !== 'Ambos os sexos') {
+                return;
+            }
+            if (item.Area !== 'Rural e Urbana') {
+                return;
+            }
+            if (item.Ano !== 2010) {
+                return;
+            }
+            itensGrafico.push([removeAcentos(item.Geografia), item.ValorAbsoluto]);
+        });
+        console.log(itensGrafico);
+        console.log('ItensGrafico');
+
+        itensGrafico.pop();
+        itensGrafico.pop();
+        itensGrafico.pop();
+
+        // Renderiza Gráfico
+        itensGrafico = google.visualization.arrayToDataTable(itensGrafico);
+        let options = {
+            title: 'Algum titulo aqui',
+            is3D: true,
+        };
+        let chart = new google.visualization.PieChart(document.getElementById('grafico'));
+        chart.draw(itensGrafico, options);
+        loader.hide();
+    }
+
+
+
+/*
+    // Inicia o mapa e gráfico após o carregamento da página.
+    loader.show();
+    iniciaMapa();
+    iniciaGrafico();
+*/
+
+</script>
+</html>

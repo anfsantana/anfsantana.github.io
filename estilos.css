@@ -1,0 +1,54 @@
+* {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: black;
+}
+
+body {
+    background-color:  rgb(0, 0, 0);
+}
+
+h1 {
+    text-align: center;
+}
+h3 {
+    text-align: center;
+}
+
+#titulo {
+    font-size: 3.03em;
+}
+
+table {
+     margin: 0px auto; 
+}
+
+#espaco{
+    background-color:  rgb(0, 0, 0);
+    position: absolute;
+    height: auto;
+    padding-top: 74px;    
+    padding-left: 50px;
+    width: 95%;
+   
+}
+
+img {
+    border-radius: 12px;
+    box-shadow: 0px 0px 6px black;
+    width: 230px;    
+    height: 230px;
+}
+
+
+#div_todo {
+    background-color: white;
+    width: 95%;
+    height: auto;
+    margin: 24px auto 0px auto;
+    position: relative;
+    box-shadow: 0px 6px 20px grey;
+}
+
+#atores2 {
+    column-count: 2
+}
