@@ -39,7 +39,7 @@
                 <tr>
                     <td>
                         <div class="container-mapa" style="width: 50%; float: left; display: none">
-                            <h2>Analfabetismo</h2>
+                            <h2>Analfabetismo 2010</h2>
                             <div id="mapa"></div>
                         </div>
                     </td>                                     
@@ -47,7 +47,7 @@
                 <tr>                      
                     <td>
                         <div class="container-mapa" style="width: 50%; float: left; display: none">
-                            <h2>Renda</h2>
+                            <h2>Renda 2010</h2>
                             <div id="mapaRenda"></div>
                         </div>
                     </td>     
@@ -55,11 +55,19 @@
                 <tr>
                     <td>
                         <div class="container-grafico" style="width: 50%; float: left; display: none">
-                            <h2>Gráfico de alguma coisa do Brasil!</h2>
+                            <h2>Gráfico Analfabetismo 2010</h2>
                             <div id="grafico" style="width: 900px; height: 500px;"></div>
                         </div>
                     </td>
                 </tr>
+                <tr>
+                        <td>
+                            <div class="container-grafico" style="width: 50%; float: left; display: none">
+                                <h2>Gráfico Renda 2010</h2>
+                                <div id="graficoRenda" style="width: 900px; height: 500px;"></div>
+                            </div>
+                        </td>
+                </tr>                
             </table>
         </div>
     </div>
@@ -139,6 +147,7 @@
     let itensMapa = [['Estado', '%']];
     let itensMapa2 = [['Estado', '%']];
     let itensGrafico = [['Estado', 'Indice']];
+    let itensGrafico2 = [['Estado', 'Indice']];
 
     function csvToArray(csv, removeHeader = true) {
         console.log('Iniciando a transformação de CSV em array!');
@@ -333,9 +342,17 @@
         $('.container-grafico').show();
         loader.show();
         // Aqui fazemos um requisição Ajax do tipo GET para obeter o arquivo CSV.
-        $.ajax('bases/base2.csv', {
+        $.ajax('bases/base1.csv', {
             // no sucesso da requisição processamos o mapa
             success: processaGrafico,
+            error: function () {
+                alert("Erro ao carregar CSV!");
+            }
+        });
+
+          $.ajax('bases/base2.csv', {
+            // no sucesso da requisição processamos o mapa
+            success: processaGraficoRenda,
             error: function () {
                 alert("Erro ao carregar CSV!");
             }
@@ -378,11 +395,55 @@
         // Renderiza Gráfico
         itensGrafico = google.visualization.arrayToDataTable(itensGrafico);
         let options = {
-            title: 'Algum titulo aqui',
+            title: '',
             is3D: true,
         };
         let chart = new google.visualization.PieChart(document.getElementById('grafico'));
         chart.draw(itensGrafico, options);
+        loader.hide();
+    }
+
+     function processaGraficoRenda(data) {
+        let array = csvToJson(data);
+
+        // Aqui extraimos do array apenas as informações que queremos, e adicionamos no array "items",
+        // que será utilizado pelo mapa do Google Charts.
+        array.forEach(function (item, index) {
+            if (estados[item.UF] !== item.Geografia) {
+                return;
+            }
+            if (item.FaixaEtaria !== 'Todas as idades') {
+                return;
+            }
+            if (item.Cor !== 'Todas as raças/cores') {
+                return;
+            }
+            if (item.Sexo !== 'Ambos os sexos') {
+                return;
+            }
+            if (item.Area !== 'Rural e Urbana') {
+                return;
+            }
+            if (item.Ano !== 2010) {
+                return;
+            }
+            itensGrafico2.push([removeAcentos(item.Geografia), item.ValorAbsoluto]);
+        });
+        console.log(itensGrafico2);
+        console.log('ItensGrafico2');
+
+        itensGrafico2.pop();
+        itensGrafico2.pop();
+        itensGrafico2.pop();
+
+        // Renderiza Gráfico
+        itensGrafico2 = google.visualization.arrayToDataTable(itensGrafico2);
+        let options = {
+            title: 'Algum titulo aqui',
+            is3D: true,
+        };
+        let chart = new google.visualization.PieChart(document.getElementById('graficoRenda'));
+        chart.draw(itensGrafico2, options);
         loader.hide();
     }
 
